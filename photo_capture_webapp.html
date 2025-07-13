@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chụp 100 Ảnh và Lưu ZIP</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(to right, #74ebd5, #9face6);
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      padding: 20px;
+      color: #fff;
+    }
+    video, canvas {
+      margin-top: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    button {
+      padding: 10px 20px;
+      margin: 20px;
+      font-size: 18px;
+      background-color: #fff;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chụp 100 Ảnh và Lưu Vào File ZIP</h1>
+  <video id="video" width="640" height="480" autoplay></video><br>
+  <button onclick="capturePhotos()">Chụp 100 ảnh</button>
+  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        alert('Không thể truy cập camera: ' + err);
+      });
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function capturePhotos() {
+      const zip = new JSZip();
+
+      for (let i = 1; i <= 100; i++) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/png');
+
+        const base64Data = dataUrl.split(',')[1];
+        zip.file(`anh_${i}.png`, base64Data, { base64: true });
+
+        await sleep(100); // Chụp mỗi 100ms
+      }
+
+      zip.generateAsync({ type: "blob" })
+        .then(function(content) {
+          saveAs(content, "100_anh.zip");
+          alert("Đã chụp xong 100 ảnh và lưu thành file ZIP!");
+        });
+    }
+  </script>
+</body>
+</html>
